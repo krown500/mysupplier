@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>لوحة تحكم العميل</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-container">
+      <div class="sidebar">
+        <button id="toggle-sidebar">☰</button>
+        <ul>
+          <li>
+            <a href="#">
+              <% if (user && user.username) { %> <%= user.username %> <% } %>
+            </a>
+          </li>
+          <li><a href="/client-dashboard">لوحة التحكم</a></li>
+          <li><a href="/logout">تسجيل خروج</a></li>
+        </ul>
+      </div>
+      <div class="main-content">
+        <h1>لوحة تحكم العميل</h1>
+
+        <!-- Filtering options -->
+        <div class="filters">
+          <label for="filter-company">الشركة:</label>
+          <select
+            id="filter-company"
+            name="filter-company"
+            onchange="filterItems()"
+          >
+            <option value="">كل الشركات</option>
+            <% companies.forEach(company => { %>
+            <option value="<%= company.id %>"><%= company.name %></option>
+            <% }); %>
+          </select>
+
+          <label for="filter-status">الحالة:</label>
+          <select
+            id="filter-status"
+            name="filter-status"
+            onchange="filterItems()"
+          >
+            <option value="">الكل</option>
+            <option value="active">نشط</option>
+            <option value="inactive">غير نشط</option>
+          </select>
+        </div>
+
+        <div id="items-stats"></div>
+
+        <!-- Items table -->
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الصورة</th>
+              <th>اسم الصنف</th>
+              <th>الصنف (En)</th>
+              <th>باركود</th>
+              <th>رقم الصنف</th>
+              <th>سعر الكرتون</th>
+              <th>سعر الحبة</th>
+              <th>الشد</th>
+              <th>الكمية</th>
+              <th>المنشأ</th>
+              <th>ملاحظات</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% items.forEach((item, index) => { %>
+            <tr
+              data-company-id="<%= item.companyId %>"
+              data-item-number="<%= item.itemNumber %>"
+            >
+              <td><%= index + 1 %></td>
+              <td>
+                <% if (item.image) { %>
+                <img
+                  src="<%= item.image %>"
+                  alt="<%= item.name %>"
+                  class="item-image"
+                />
+                <% } %>
+              </td>
+              <td><%= item.name %></td>
+              <td><%= item.nameEn %></td>
+              <td><%= item.barcode %></td>
+              <td><%= item.itemNumber %></td>
+              <td><%= item.cartonPrice %></td>
+              <td><%= item.unitPrice %></td>
+              <td><%= item.bundleSize %></td>
+              <td><%= item.quantity %></td>
+              <td><%= item.origin %></td>
+              <td><%= item.notes %></td>
+              <td><%= item.itemNumber ? 'نشط' : 'غير نشط' %></td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const toggleSidebarButton = document.getElementById('toggle-sidebar');
+      const body = document.body;
+
+      toggleSidebarButton.addEventListener('click', function () {
+        body.classList.toggle('sidebar-collapsed');
+      });
+
+      function filterItems() {
+        const companyId = document.getElementById('filter-company').value;
+        const status = document.getElementById('filter-status').value;
+        
+        const items = document.querySelectorAll('.items-table tbody tr');
+        let activeCount = 0;
+        let inactiveCount = 0;
+
+        items.forEach(item => {
+          const itemCompanyId = parseInt(item.getAttribute('data-company-id'));
+          const hasItemNumber = item.getAttribute('data-item-number') !== 'null';
+
+          // Check if item matches all filters
+          const matchesCompany = !companyId || itemCompanyId === parseInt(companyId);
+          const matchesStatus = !status || 
+            (status === 'active' && hasItemNumber) || 
+            (status === 'inactive' && !hasItemNumber);
+
+          if (matchesCompany && matchesStatus) {
+            item.style.display = '';
+            if (hasItemNumber) activeCount++;
+            else inactiveCount++;
+          } else {
+            item.style.display = 'none';
+          }
+        });
+
+        // Update stats
+        const statsDiv = document.getElementById('items-stats');
+        statsDiv.innerHTML = `
+          إجمالي الأصناف النشطة: ${activeCount}<br>
+          إجمالي الأصناف غير النشطة: ${inactiveCount}<br>
+          الإجمالي: ${activeCount + inactiveCount}
+        `;
+      }
+
+      // Initial filter
+      filterItems();
+    </script>
+  </body>
+</html>

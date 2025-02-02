@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>طلب تزويد بضاعة</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #ffffff;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      body {
+        padding: 10px;
+        padding-right: 0;
+        margin-right: 0;
+        font-family: Arial, sans-serif;
+        background-color: #ffffff;
+      }
+      .page-container {
+        padding: 0; /* تم إزالة padding */
+        padding-right: 15px;
+        margin-right: 0;
+        max-width: 1200px;
+        margin-left: auto;
+        margin-top: 0;
+      }
+      .main-content {
+        padding: 0; /* تم إزالة padding */
+        padding-right: 15px;
+        margin-right: 0;
+        margin-top: 0;
+      }
+      .header-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 0;
+      }
+      .title-image-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 0;
+        padding-top: 0;
+      }
+      .title-container {
+        flex: 1;
+        text-align: center;
+        position: relative;
+      }
+      .title-container h2 {
+        margin: 0;
+        color: #000000;
+        font-weight: 900;
+        position: relative;
+        top: 90px;
+      }
+      .client-image {
+        max-width: 155px;
+        max-height: 130px;
+        position: relative;
+        top: 15px;
+        object-fit: contain;
+      }
+      .client-info {
+        text-align: center;
+        margin: 0;
+        position: relative;
+        top: 120px;
+        right: -15%;
+        width: 100%;
+      }
+      .client-info p {
+        font-size: 1.8em;
+        font-weight: 900;
+        margin: 0;
+        text-align: right;
+        padding-right: 25%;
+        color: #000000;
+      }
+      .request-header {
+        text-align: center;
+        margin-bottom: 0;
+        margin-right: 0;
+      }
+      .date-container {
+        text-align: left;
+        margin-bottom: 0;
+      }
+      .table-container {
+        margin-top: 0; /* تم إزالة margin */
+        display: flex;
+        flex-direction: column;
+      }
+      .table-signature-wrapper {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - 400px);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        flex: 1;
+      }
+      table th,
+      table td {
+        border: 1px solid #000;
+        padding: 4px;
+        text-align: center;
+        height: 40px;
+        line-height: 40px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      table td {
+        font-weight: 600;
+        color: #000000;
+      }
+
+      table th {
+        background-color: #4c66ce;
+        color: white;
+        font-weight: bold;
+        height: 40px;
+        line-height: 40px;
+      }
+      
+      @media print {
+        table th,
+        table td {
+          height: 40px !important;
+          line-height: 40px !important;
+          padding: 0 4px !important;
+        }
+
+        table td {
+          font-weight: 400 !important;
+          color: #000000 !important;
+        }
+        
+        tbody tr {
+          height: 40px !important;
+        }
+        
+        .item-row {
+          height: 40px !important;
+        }
+      }
+      .signature-section {
+        text-align: left;
+        padding-top: 20px;
+        position: relative;
+        left: 0;
+        margin-top: auto;
+      }
+      .signature-text {
+        color: #000000;
+        font-size: 1.2em;
+        font-weight: 900;
+      }
+      .signature-dots {
+        display: inline-block;
+        margin-right: 10px;
+        color: #000;
+      }
+      .back-button {
+        display: none;
+      }
+      .back-button:hover {
+        display: none;
+      }
+
+      @media print {
+        @page {
+          margin: 10mm;
+          size: A4;
+        }
+
+        body {
+          background: white;
+          padding: 0;
+          margin: 0;
+        }
+
+        .page-container {
+          padding: 0;
+          margin: 0;
+          max-width: none;
+        }
+
+        .main-content {
+          padding: 0;
+          margin: 0;
+        }
+
+        .client-info {
+          right: 0;
+        }
+
+        .client-info p {
+          padding-right: 15%;
+        }
+
+        .page-content {
+          height: calc(100vh - 20mm);
+          display: flex;
+          flex-direction: column;
+          page-break-after: always;
+        }
+
+        .table-container {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          margin: 0;
+        }
+
+        .table-signature-wrapper {
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+          height: 100%;
+        }
+
+        table {
+          margin-bottom: 0;
+        }
+
+        table th,
+        table td {
+          height: 40px !important;
+          line-height: 40px !important;
+          padding: 0 4px !important;
+        }
+        
+        tbody tr {
+          height: 40px !important;
+        }
+        
+        .item-row {
+          height: 40px !important;
+        }
+
+        .signature-section {
+          page-break-before: avoid !important;
+          page-break-inside: avoid !important;
+          margin-top: 20px;
+          position: relative;
+          bottom: 0;
+        }
+
+        .back-button {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-container">
+      <div class="main-content">
+        <% if (items && items.length > 0) { %>
+          <% 
+            const rowsPerPage = 15;
+            for(let i = 0; i < items.length; i += rowsPerPage) { 
+          %>
+            <div class="page-content">
+              <div class="request-header">
+                <div class="header-container">
+                  <% if (selectedClientId && clientNames && clientNames.length > 0) { %>
+                    <div class="client-info">
+                      <p style="margin-bottom: 41px; margin-top: -90px; font-weight: 900; color: #000000;"><%= clientNames.join('، ') %></p>
+                    </div>
+                  <% } %>
+                  <div class="title-image-container" style="display: flex; justify-content: center;">
+                    <div style="width: 100px;"></div>
+                    <div class="title-container">
+                      <h2 style="position: relative; top: 52px; color: #000000; font-weight: 900;">طلب تزويد بضاعة</h2>
+                    </div>
+                    <% if (selectedClientId && selectedClient && selectedClient.image && selectedClient.image.trim() !== '') { %>
+                      <img src="<%= selectedClient.image %>" class="client-image" style="position: relative; top: 25px;" onerror="this.style.display='none'" />
+                    <% } else { %>
+                      <div style="width: 155px; height: 130px;"></div>
+                    <% } %>
+                  </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 4px;">
+                  <div class="text-content" style="text-align: right; flex: 1">
+                    <p>
+                      <b>السيد/المدير العام المحترم:</b>
+                      .....................................................................
+                      <br />
+                      <b>يرجى العمل على تزويدنا بالأصناف الآتية:</b>
+                      <br />
+                      <b>اسم المورد/ <%= companyName %></b>
+                    </p>
+                  </div>
+                  <div class="date-container" style="text-align: right; margin-left: 20px">
+                    <br />
+                    <b>التاريخ: ...............................</b>
+                    <br />
+                    <br />
+                    <b>رقم المورد: <%= supplierId %></b>
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-container">
+                <div class="table-signature-wrapper">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style="width: 110px; padding: 4px;">باركود الحبة</th>
+                        <th style="padding: 4px;">اسم الصنف</th>
+                        <th style="width: 20px; padding: 4px;">السعر </th>
+                        <th style="width: 20px; padding: 4px;">الشد</th>
+                        <th style="width: 20px; padding: 4px;">الكمية</th>
+                        <th style="width: 20px; padding: 4px;">رقم الصنف</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% 
+                        const pageItems = items.slice(i, i + rowsPerPage);
+                        for(let item of pageItems) { 
+                      %>
+                        <tr class="item-row">
+                          <td style="padding: 4px;"><%= item.barcode %></td>
+                          <td style="padding: 4px;"><%= item.name %></td>
+                          <td style="padding: 4px;"><%= item.cartonPrice != null && item.cartonPrice != 0 ? item.cartonPrice : '' %></td>
+                          <td style="padding: 4px;"><%= item.bundleSize %></td>
+                          <td style="padding: 4px;"><%= item.quantity %></td>
+                          <td style="padding: 4px;"><%= item.itemNumber %></td>
+                        </tr>
+                      <% } %>
+                    </tbody>
+                  </table>
+                  <div class="signature-section">
+                    <p><span class="signature-text">مسؤول السوق</span> <span class="signature-dots">.....................................</span></p>
+                    <p><span class="signature-text">التوقيع</span> <span class="signature-dots">.....................................</span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% } %>
+        <% } else { %>
+          <div class="table-container">
+            <div class="table-signature-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 110px; padding: 4px;">باركود الحبة</th>
+                    <th style="padding: 4px;">اسم الصنف</th>
+                    <th style="width: 20px; padding: 4px;">السعر </th>
+                    <th style="width: 20px; padding: 4px;">الشد</th>
+                    <th style="width: 20px; padding: 4px;">الكمية</th>
+                    <th style="width: 20px; padding: 4px;">رقم الصنف</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="6" style="text-align: center; color: red;">
+                      لا توجد أصناف محددة.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="signature-section">
+                <p><span class="signature-text">مسؤول السوق</span> <span class="signature-dots">.....................................</span></p>
+                <p><span class="signature-text">التوقـيع</span> <span class="signature-dots">.....................................</span></p>
+              </div>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </body>
+</html>

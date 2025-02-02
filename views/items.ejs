@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>الأصناف</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  </head>
+  <body>
+    <div class="page-container">
+      <div class="sidebar">
+        <button id="toggle-sidebar">
+          <i class="fas fa-bars"></i>
+        </button>
+        <ul>
+          <li>
+            <a href="#">
+              <i class="fas fa-user-shield"></i>
+              <span><% if (user && user.username) { %> <%= user.username %> <% } %></span>
+            </a>
+          </li>
+          <li>
+            <a href="/companies" class="active">
+              <i class="fas fa-building"></i>
+              <span>الشركات</span>
+            </a>
+          </li>
+          <li>
+            <a href="/create-company">
+              <i class="fas fa-plus-circle"></i>
+              <span>إنشاء شركة</span>
+            </a>
+          </li>
+          <li>
+            <a href="/clients">
+              <i class="fas fa-users"></i>
+              <span>العملاء</span>
+            </a>
+          </li>
+          <li>
+            <a href="/create-client">
+              <i class="fas fa-user-plus"></i>
+              <span>إنشاء عميل</span>
+            </a>
+          </li>
+          <li>
+            <a href="/groups">
+              <i class="fas fa-layer-group"></i>
+              <span>المجموعات</span>
+            </a>
+          </li>
+          <li>
+            <a href="/create-group">
+              <i class="fas fa-folder-plus"></i>
+              <span>إنشاء مجموعة</span>
+            </a>
+          </li>
+          <li>
+            <a href="/suppliers">
+              <i class="fas fa-chart-line"></i>
+              <span>مدير المبيعات</span>
+            </a>
+          </li>
+          <li>
+            <a href="/create-supplier">
+              <i class="fas fa-truck"></i>
+              <span>إنشاء مورد</span>
+            </a>
+          </li>
+          <li>
+            <a href="/items">
+              <i class="fas fa-box"></i>
+              <span>الأصناف</span>
+            </a>
+          </li>
+          <li>
+            <a href="/create-item">
+              <i class="fas fa-plus-square"></i>
+              <span>إضافة صنف</span>
+            </a>
+          </li>
+        </ul>
+
+        <li>
+          <a href="/logout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>تسجيل خروج</span>
+          </a>
+        </li>
+      </div>
+      <div class="main-content">
+        <h1>الأصناف</h1>
+
+        <!-- Search Form -->
+        <div class="search-and-filters">
+          <form action="" method="GET" class="search-form">
+            <div class="search-box">
+              <input 
+                type="text" 
+                name="search" 
+                placeholder="البحث..."
+                value="<%= search %>"
+              />
+              <button type="submit">بحث</button>
+            </div>
+          </form>
+
+          <div class="filters">
+            <div class="filter-group">
+              <label for="companyId">الشركة:</label>
+              <select name="companyId" class="modern-select" onchange="updateClientsAndGroups(this.value)">
+                <option value="">كل الشركات</option>
+                <% companies.forEach(company => { %>
+                <option value="<%= company.id %>" <%= req.query.companyId == company.id ? 'selected' : '' %>>
+                  <%= company.name %>
+                </option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="clientId">العميل:</label>
+              <select name="clientId" id="clientSelect" class="modern-select" onchange="updateGroups(this.value)">
+                <option value="">كل العملاء</option>
+                <% clients.forEach(client => { %>
+                <option value="<%= client.id %>" 
+                        data-company="<%= client.companyId %>"
+                        <%= req.query.clientId == client.id ? 'selected' : '' %>
+                        style="display: <%= (!req.query.companyId || req.query.companyId == client.companyId) ? 'block' : 'none' %>">
+                  <%= client.name %>
+                </option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="groupId">المجموعة:</label>
+              <select name="groupId" id="groupSelect" class="modern-select">
+                <option value="">كل المجموعات</option>
+                <% groups.forEach(group => { %>
+                <option value="<%= group.id %>"
+                        data-client="<%= group.clientId %>"
+                        <%= req.query.groupId == group.id ? 'selected' : '' %>
+                        style="display: <%= (!req.query.clientId || req.query.clientId == group.clientId) ? 'block' : 'none' %>">
+                  <%= group.name %>
+                </option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="supplierId">المورد:</label>
+              <select name="supplierId" class="modern-select">
+                <option value="">كل الموردين</option>
+                <% suppliers.forEach(supplier => { %>
+                <option value="<%= supplier.id %>" <%= req.query.supplierId == supplier.id ? 'selected' : '' %>>
+                  <%= supplier.name %>
+                </option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="status">الحالة:</label>
+              <select name="status" class="modern-select">
+                <option value="">كل الحالات</option>
+                <option value="active" <%= req.query.status === 'active' ? 'selected' : '' %>>نشط</option>
+                <option value="inactive" <%= req.query.status === 'inactive' ? 'selected' : '' %>>غير نشط</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Import and Export Buttons -->
+        <div class="import-export-buttons">
+          <div class="buttons-container">
+            <form action="/import-items" method="post" enctype="multipart/form-data" class="import-form">
+              <input type="file" name="excelFile" accept=".xlsx,.xls" required>
+              <button type="submit" class="button">استيراد من Excel</button>
+            </form>
+            <button onclick="exportFilteredItems()" class="button">تصدير إلى Excel</button>
+          </div>
+        </div>
+
+        <div class="stats-container">
+          <div class="stat-box">
+            <h3>إجمالي الأصناف</h3>
+            <p><%= itemCounts.total %></p>
+          </div>
+          <div class="stat-box">
+            <h3>الأصناف النشطة</h3>
+            <p><%= itemCounts.active %></p>
+          </div>
+          <div class="stat-box">
+            <h3>الأصناف غير النشطة</h3>
+            <p><%= itemCounts.inactive %></p>
+          </div>
+        </div>
+
+        <div id="items-stats"></div>
+
+        <!-- Items table -->
+        <div class="table-container">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>الصورة</th>
+                <th>اسم الصنف</th>
+                <th>الصنف (En)</th>
+                <th>باركود</th>
+                <th>رقم الصنف</th>
+                <th>سعر الكرتون</th>
+                <th>سعر الحبة</th>
+                <th>الشد</th>
+                <th>الكمية</th>
+                <th>المنشأ</th>
+                <th>ملاحظات</th>
+                <th>الحالة</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% items.forEach((item, index) => { %>
+              <tr
+                class="item-row"
+                data-company="<%= item.companyId %>"
+                data-client="<%= item.clientId %>"
+                data-group="<%= item.groupId %>"
+                data-supplier="<%= item.supplierId %>"
+                data-status="<%= item.itemNumber ? 'active' : 'inactive' %>"
+              >
+                <td><%= (currentPage - 1) * 10 + index + 1 %></td>
+                <td>
+                  <% if (item.image) { %>
+                    <img src="/uploads/<%= item.image %>" alt="<%= item.name %>" style="width: 80px; height: 80px; object-fit: contain; border-radius: 4px;">
+                  <% } %>
+                </td>
+                <td><%= item.name %></td>
+                <td><%= item.nameEn %></td>
+                <td><%= item.barcode %></td>
+                <td><%= item.itemNumber == null || item.itemNumber == 0 ? '' : item.itemNumber %></td>
+                <td><%= item.cartonPrice == null || item.cartonPrice == 0 ? '' : item.cartonPrice %></td>
+                <td><%= item.unitPrice == null || item.unitPrice == 0 ? '' : item.unitPrice %></td>
+                <td><%= item.bundleSize == null || item.bundleSize == 0 ? '' : item.bundleSize %></td>
+                <td><%= item.quantity == null || item.quantity == 0 ? '' : item.quantity %></td>
+                <td><%= item.origin %></td>
+                <td><%= item.notes %></td>
+                <td><% if (item.itemNumber) { %>
+                  <span class="status-active">نشط</span>
+                <% } else { %>
+                  <span class="status-inactive">غير نشط</span>
+                <% } %></td>
+                <td class="actions">
+                  <a href="/edit-item/<%= item.id %>" class="edit-btn">تعديل</a>
+                  <form action="/delete-item/<%= item.id %>" method="post" style="display: inline;">
+                    <button type="submit" class="delete-btn">حذف</button>
+                  </form>
+                  <a href="/item/<%= item.id %>" class="view-btn">عرض</a>
+                </td>
+              </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+
+        <% if (totalPages > 1) { %>
+          <div class="pagination">
+            <% if (currentPage > 1) { %>
+              <a href="javascript:void(0)" onclick="changePage(<%= currentPage - 1 %>)">&laquo;</a>
+            <% } %>
+
+            <% for(let i = 1; i <= totalPages; i++) { %>
+              <% if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
+                <a href="javascript:void(0)" 
+                   onclick="changePage(<%= i %>)"
+                   class="<%= currentPage == i ? 'active' : '' %>">
+                  <%= i %>
+                </a>
+              <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
+                <span class="pagination-dots">...</span>
+              <% } %>
+            <% } %>
+
+            <% if (currentPage < totalPages) { %>
+              <a href="javascript:void(0)" onclick="changePage(<%= currentPage + 1 %>)">&raquo;</a>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <script>
+      const toggleSidebarButton = document.getElementById('toggle-sidebar');
+      const sidebar = document.querySelector('.sidebar');
+      const mainContent = document.querySelector('.main-content');
+      
+      toggleSidebarButton.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+      });
+
+      document.getElementById('toggle-sidebar').addEventListener('click', function() {
+        document.body.classList.toggle('sidebar-open');
+      });
+
+      document.querySelectorAll('select').forEach(select => {
+        select.addEventListener('change', function() {
+          updateFilters();
+        });
+      });
+
+      document.querySelector('input[name="search"]').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') {
+          updateFilters();
+        }
+      });
+
+      function getFilterParams() {
+        const params = new URLSearchParams();
+        
+        const search = document.querySelector('input[name="search"]').value;
+        const companyId = document.querySelector('select[name="companyId"]').value;
+        const clientId = document.querySelector('select[name="clientId"]').value;
+        const groupId = document.querySelector('select[name="groupId"]').value;
+        const supplierId = document.querySelector('select[name="supplierId"]').value;
+        const status = document.querySelector('select[name="status"]').value;
+
+        if (search) params.append('search', search);
+        if (companyId) params.append('companyId', companyId);
+        if (clientId) params.append('clientId', clientId);
+        if (groupId) params.append('groupId', groupId);
+        if (supplierId) params.append('supplierId', supplierId);
+        if (status) params.append('status', status);
+
+        return params;
+      }
+
+      function updateFilters() {
+        const params = getFilterParams();
+        window.location.href = `/items?${params.toString()}`;
+      }
+
+      function resetFilters() {
+        window.location.href = '/items';
+      }
+
+      function changePage(pageNum) {
+        const params = getFilterParams();
+        params.set('page', pageNum.toString());
+        window.location.href = `/items?${params.toString()}`;
+      }
+
+      function exportFilteredItems() {
+        const params = getFilterParams();
+        window.location.href = `/export-items?${params.toString()}`;
+      }
+
+      function updateClientsAndGroups(companyId) {
+        const clientSelect = document.getElementById('clientSelect');
+        const clientOptions = clientSelect.getElementsByTagName('option');
+        
+        for (let option of clientOptions) {
+          if (!companyId || option.value === '' || option.getAttribute('data-company') === companyId) {
+            option.style.display = 'block';
+          } else {
+            option.style.display = 'none';
+          }
+        }
+        
+        clientSelect.value = '';
+        updateGroups('');
+        updateFilters();
+      }
+
+      function updateGroups(clientId) {
+        const groupSelect = document.getElementById('groupSelect');
+        const groupOptions = groupSelect.getElementsByTagName('option');
+        
+        for (let option of groupOptions) {
+          if (!clientId || option.value === '' || option.getAttribute('data-client') === clientId) {
+            option.style.display = 'block';
+          } else {
+            option.style.display = 'none';
+          }
+        }
+        
+        groupSelect.value = '';
+        updateFilters();
+      }
+
+      function updateSuppliers(companyId) {
+        const supplierSelect = document.getElementById('supplierSelect');
+        const currentSupplierId = '<%= req.query.supplierId %>';
+        
+        supplierSelect.value = '';
+        document.getElementById('filterForm').submit();
+      }
+      
+      document.querySelector('select[name="companyId"]').addEventListener('change', function() {
+        updateSuppliers(this.value);
+      });
+
+      document.getElementById('groupSelect').addEventListener('change', function() {
+        const selectedGroups = Array.from(this.selectedOptions).map(option => option.value);
+        const form = this.closest('form');
+        
+        form.querySelectorAll('input[name="groupIds"]').forEach(input => input.remove());
+        
+        selectedGroups.forEach(groupId => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'groupIds';
+          input.value = groupId;
+          form.appendChild(input);
+        });
+        
+        form.submit();
+      });
+    </script>
+
+    <style>
+      .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .btn-secondary:hover {
+        background-color: #5a6268;
+      }
+
+      .btn-secondary i {
+        margin-left: 5px;
+      }
+
+      .filter-group {
+        margin-bottom: 1rem;
+      }
+
+      .import-export-buttons {
+        margin: 20px 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .buttons-container {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .import-form {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+      }
+
+      .button {
+        padding: 8px 16px;
+        background-color: var(--color-gray-dark);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 14px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .button:hover {
+        background-color: var(--color-gray-darker);
+      }
+
+      input[type="file"] {
+        padding: 5px;
+        border: 1px solid var(--color-gray);
+        border-radius: 4px;
+        background-color: var(--color-gray-dark);
+        color: var(--color-white);
+      }
+
+      .edit-btn,
+      .view-btn,
+      .delete-btn {
+        padding: 8px 16px;
+        color: var(--color-orange);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 4px;
+        font-size: 14px;
+        background-color: var(--color-gray-dark);
+        min-width: 70px;
+        height: 32px;
+      }
+
+      .edit-btn:hover,
+      .view-btn:hover,
+      .delete-btn:hover {
+        background-color: var(--color-gray-darker);
+      }
+
+      table td .actions {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+      }
+
+      table td .actions a,
+      table td .actions button {
+        padding: 6px 12px;
+        font-size: 13px;
+        min-width: 70px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-orange);
+        background-color: var(--color-gray-dark);
+      }
+
+      .actions form {
+        margin: 0;
+        padding: 0;
+      }
+
+      .actions button {
+        border: none;
+        font-family: inherit;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+      }
+
+      th {
+        background-color: var(--color-gray-dark);
+        color: var(--color-orange);
+        padding: 12px;
+        text-align: center;
+        font-weight: bold;
+      }
+
+      td {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid var(--color-gray);
+        transition: all 0.3s ease;
+      }
+
+      tr:nth-child(even) {
+        background-color: var(--color-gray);
+      }
+
+      tr:hover {
+        background-color: var(--color-black);
+      }
+
+      tr:hover td {
+        color: var(--color-orange);
+      }
+
+      tr:hover .edit-btn,
+      tr:hover .view-btn,
+      tr:hover .delete-btn {
+        background-color: var(--color-gray-dark);
+      }
+
+      .search-and-filters {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 20px 0;
+      }
+
+      .search-form {
+        display: flex;
+        gap: 10px;
+      }
+
+      .search-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .search-input {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .search-button {
+        padding: 8px 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .search-button:hover {
+        background-color: #0056b3;
+      }
+
+      .stats-container {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+        gap: 20px;
+      }
+
+      .filtered-stats-container {
+        display: flex;
+        justify-content: center;
+        margin: 20px 0;
+      }
+
+      .filtered-stats-container .stat-box {
+        background-color: #e9ecef;
+        min-width: 200px;
+      }
+
+      .stat-box {
+        background-color: var(--color-gray-dark);
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        margin: 10px;
+        flex: 1;
+      }
+
+      .stat-box h3 {
+        margin: 0 0 10px 0;
+        color: var(--color-white);
+      }
+
+      .stat-box p {
+        margin: 0;
+        font-size: 1.5em;
+        font-weight: bold;
+        color: var(--color-orange);
+      }
+
+      .status-active,
+      .status-inactive {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+
+      .status-active {
+        background-color: var(--color-gray-dark);
+        color: var(--color-orange);
+      }
+
+      .status-inactive {
+        background-color: var(--color-orange);
+        color: var(--color-white);
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        margin: 20px 0;
+      }
+
+      .pagination a {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #333;
+        min-width: 40px;
+        text-align: center;
+        cursor: pointer;
+      }
+
+      .pagination a.active {
+        background-color: #4c66ce;
+        color: white;
+        border-color: #4c66ce;
+      }
+
+      .pagination a:hover:not(.active) {
+        background-color: #f5f5f5;
+      }
+
+      .pagination-dots {
+        padding: 8px 12px;
+        color: #666;
+      }
+    </style>
+  </body>
+</html>

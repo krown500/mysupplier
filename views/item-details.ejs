@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>تفاصيل الصنف</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-container">
+      <div class="sidebar">
+        <button id="toggle-sidebar">☰</button>
+        <ul>
+          <li>
+            <a href="#">
+              <% if (user && user.username) { %> <%= user.username %> <% } %>
+            </a>
+          </li>
+          <li><a href="/logout">تسجيل خروج</a></li>
+          <li><a href="/companies">الشركات</a></li>
+          <li><a href="/create-company">إنشاء شركة</a></li>
+          <li><a href="/clients">العملاء</a></li>
+          <li><a href="/create-client">إنشاء عميل</a></li>
+          <li><a href="/groups">المجموعات</a></li>
+          <li><a href="/create-group">إنشاء مجموعة</a></li>
+          <li><a href="/suppliers">مدير المبيعات</a></li>          <li><a href="/create-supplier">إنشاء مورد</a></li>
+          <li><a href="/items">الأصناف</a></li>
+          <li><a href="/create-item">إضافة صنف</a></li>
+        </ul>
+      </div>
+      <div class="main-content">
+        <h1>تفاصيل الصنف</h1>
+        <div class="item-details">
+          <h2><%= item.name %></h2>
+          <% if (item.image) { %>
+          <img
+            src="<%= item.image %>"
+            alt="<%= item.name %>"
+            class="item-image"
+          />
+          <% } %>
+          <p>اسم الصنف (En): <%= item.nameEn %></p>
+          <p>باركود: <%= item.barcode %></p>
+          <p>رقم الصنف: <%= item.itemNumber %></p>
+          <p>سعر الكرتون: <%= item.cartonPrice %></p>
+          <p>سعر الحبة: <%= item.unitPrice %></p>
+          <p>الشد: <%= item.bundleSize %></p>
+          <p>الكمية: <%= item.quantity %></p>
+          <p>المنشأ: <%= item.origin %></p>
+          <p>ملاحظات: <%= item.notes %></p>
+          <p>الحالة: <%= item.itemNumber ? 'نشط' : 'غير نشط' %></p>
+          <!-- Add more details as needed -->
+        </div>
+      </div>
+    </div>
+    <script>
+      const toggleSidebarButton = document.getElementById("toggle-sidebar");
+      const body = document.body;
+
+      toggleSidebarButton.addEventListener("click", function () {
+        body.classList.toggle("sidebar-open");
+      });
+    </script>
+  </body>
+</html>

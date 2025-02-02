@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>لوحة تحكم المورد</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  </head>
+  <body>
+    <div class="page-container">
+      <div class="sidebar">
+        <button id="toggle-sidebar">☰</button>
+        <ul>
+          <li>
+            <a href="#">
+              <i class="fas fa-user"></i>
+              <span><% if (user && user.username) { %> <%= user.username %> <% } %></span>
+            </a>
+          </li>
+          <li>
+            <a href="/supplier-dashboard">
+              <i class="fas fa-home"></i>
+              <span>لوحة التحكم</span>
+            </a>
+          </li>
+          <li>
+            <a href="/supplier-companies">
+              <i class="fas fa-building"></i>
+              <span>الشركات</span>
+            </a>
+          </li>
+          <li>
+            <a href="/supplier-clients">
+              <i class="fas fa-users"></i>
+              <span>العملاء</span>
+            </a>
+          </li>
+          <li>
+            <a href="/supplier-groups">
+              <i class="fas fa-layer-group"></i>
+              <span>المجموعات</span>
+            </a>
+          </li>
+          <li>
+            <a href="/logout">
+              <i class="fas fa-sign-out-alt"></i>
+              <span>تسجيل خروج</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="main-content supplier-dashboard">
+        <h1>لوحة تحكم المورد</h1>
+
+        <div class="search-and-filters">
+          <form action="/supplier-dashboard" method="GET" class="search-form">
+            <div class="search-box">
+              <input type="text" name="search" value="<%= search %>" placeholder="البحث بالاسم أو الباركود..." />
+              <button type="submit">بحث</button>
+            </div>
+          </form>
+
+          <div class="filters">
+            <div class="filter-group">
+              <label for="companyId">الشركة:</label>
+              <select name="companyId" class="modern-select" onchange="updateClientsAndGroups(this.value)">
+                <option value="">كل الشركات</option>
+                <% companies.forEach(company => { %>
+                  <option value="<%= company.id %>" <%= req.query.companyId == company.id ? 'selected' : '' %>><%= company.name %></option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="clientId">العميل:</label>
+              <select name="clientId" id="clientSelect" class="modern-select" onchange="updateGroups(this.value)">
+                <option value="">كل العملاء</option>
+                <% clients.forEach(client => { %>
+                  <option value="<%= client.id %>" 
+                          data-company="<%= client.companyId %>"
+                          <%= req.query.clientId == client.id ? 'selected' : '' %>
+                          style="display: <%= (!req.query.companyId || req.query.companyId == client.companyId) ? 'block' : 'none' %>">
+                    <%= client.name %>
+                  </option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="groupIds">المجموعة:</label>
+              <select name="groupIds" id="groupSelect" class="modern-select" multiple>
+                <option value="">كل المجموعات</option>
+                <% groups.forEach(group => { %>
+                  <option value="<%= group.id %>" 
+                          data-client="<%= group.clientId %>"
+                          <%= Array.isArray(req.query.groupIds) ? req.query.groupIds.includes(group.id.toString()) ? 'selected' : '' : req.query.groupIds == group.id ? 'selected' : '' %>
+                          style="display: <%= (!req.query.clientId || req.query.clientId == group.clientId) ? 'block' : 'none' %>">
+                    <%= group.name %>
+                  </option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="status">الحالة:</label>
+              <select name="status" class="modern-select">
+                <option value="">كل الحالات</option>
+                <option value="active" <%= req.query.status === 'active' ? 'selected' : '' %>>نشط</option>
+                <option value="inactive" <%= req.query.status === 'inactive' ? 'selected' : '' %>>غير نشط</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions-bar">
+        
+        </div>
+              <!-- Restock Request Button -->
+        <div style="margin-bottom: 20px; text-align: center;">
+          <p style="margin-bottom: 10px; color: #666;">في حال أردت طباعة الجدول PDF</p>
+          <button class="restock-request-btn" onclick="generateRestockRequest()">طلب تزويد بضاعة</button>
+        </div>
+        <div class="stats-container">
+          <div class="stat-box">
+            <h3>إجمالي الأصناف</h3>
+            <p><%= itemCounts.total %></p>
+          </div>
+          <div class="stat-box">
+            <h3>الأصناف النشطة</h3>
+            <p><%= itemCounts.active %></p>
+          </div>
+          <div class="stat-box">
+            <h3>الأصناف غير النشطة</h3>
+            <p><%= itemCounts.inactive %></p>
+          </div>
+        </div>
+
+        <div id="items-stats"></div>
+
+  
+    
+        <!-- Items table -->
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الصورة</th>
+              <th>اسم الصنف</th>
+              <th>الصنف (En)</th>
+              <th>باركود</th>
+              <th>رقم الصنف</th>
+              <th>سعر الكرتون</th>
+              <th>سعر الحبة</th>
+              <th>الشد</th>
+              <th>الكمية</th>
+              <th>المنشأ</th>
+              <th>ملاحظات</th>
+              <th>الحالة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% items.forEach((item, index) => { %>
+            <tr
+              class="item-row"
+              data-company="<%= item.companyId %>"
+              data-client="<%= item.clientId %>"
+              data-group="<%= item.groupId %>"
+              data-status="<%= item.itemNumber ? 'active' : 'inactive' %>"
+              data-item-id="<%= item.id %>"
+              data-item-barcode="<%= item.barcode %>"
+              data-item-name="<%= item.name %>"
+              data-item-unitPrice="<%= item.unitPrice %>"
+              data-item-bundleSize="<%= item.bundleSize %>"
+              data-item-quantity="<%= item.quantity %>"
+              data-item-itemNumber="<%= item.itemNumber %>"
+            >
+              <td><%= (currentPage - 1) * 10 + index + 1 %></td>
+              <td>
+                <% if (item.image) { %>
+                <img
+                  src="<%= item.image %>"
+                  alt="<%= item.name %>"
+                  class="item-image"
+                />
+                <% } %>
+              </td>
+              <td><%= item.name %></td>
+              <td><%= item.nameEn %></td>
+              <td><%= item.barcode %></td>
+              <td>
+                <%= item.itemNumber == null || isNaN(item.itemNumber) ||
+                item.itemNumber == 0 ? '' : item.itemNumber %>
+              </td>
+              <td>
+                <%= item.cartonPrice == null || isNaN(item.cartonPrice) ||
+                item.cartonPrice == 0 ? '' : item.cartonPrice %>
+              </td>
+              <td>
+                <%= item.unitPrice == null || isNaN(item.unitPrice) ||
+                item.unitPrice == 0 ? '' : item.unitPrice %>
+              </td>
+              <td>
+                <%= item.bundleSize == null || isNaN(item.bundleSize) ||
+                item.bundleSize == 0 ? '' : item.bundleSize %>
+              </td>
+              <td>
+                <%= item.quantity == null || isNaN(item.quantity) ||
+                item.quantity == 0 ? '' : item.quantity %>
+              </td>
+              <td><%= item.origin %></td>
+              <td><%= item.notes %></td>
+              <td>
+                <span class="<%= item.itemNumber ? 'status-active' : 'status-inactive' %>">
+                  <%= item.itemNumber ? 'نشط' : 'غير نشط' %>
+                </span>
+              </td>
+              <td>
+                <div class="actions">
+                  <a href="/edit-item/<%= item.id %>" class="edit-btn">
+                    <i class="fas fa-edit"></i> تعديل
+                  </a>
+                  <button onclick="viewItemDetails('<%= item.id %>')" class="view-details-btn">
+                    <i class="fas fa-eye"></i> عرض
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+          <div class="pagination">
+            <% if (currentPage > 1) { %>
+              <a href="javascript:void(0)" onclick="changePage(<%= currentPage - 1 %>)">&laquo;</a>
+            <% } %>
+            
+            <% for(let i = 1; i <= totalPages; i++) { %>
+              <a href="javascript:void(0)" 
+                onclick="changePage(<%= i %>)"
+                class="<%= currentPage == i ? 'active' : '' %>">
+                <%= i %>
+              </a>
+            <% } %>
+            
+            <% if (currentPage < totalPages) { %>
+              <a href="javascript:void(0)" onclick="changePage(<%= currentPage + 1 %>)">&raquo;</a>
+            <% } %>
+          </div>
+        <% } %>
+
+        <style>
+          /* Pagination Styles */
+          .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 5px;
+          }
+
+          .pagination a, .pagination span {
+            padding: 8px 12px;
+            margin: 0 2px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #666;
+          }
+
+          .pagination a:hover {
+            background-color: #f5f5f5;
+            border-color: #999;
+          }
+
+          .pagination a.active {
+            background-color: #ff8c00;
+            color: white;
+            border-color: #ff8c00;
+          }
+
+          .pagination .prev,
+          .pagination .next {
+            background-color: #ff8c00;
+            color: white;
+            border-color: #ff8c00;
+          }
+
+          .pagination .prev:hover,
+          .pagination .next:hover {
+            background-color: #ff8c00;
+          }
+
+          .pagination-ellipsis {
+            padding: 8px 12px;
+            color: #666;
+          }
+
+          @media (max-width: 768px) {
+            .pagination {
+              font-size: 14px;
+            }
+            .pagination a, .pagination span {
+              padding: 6px 10px;
+              min-width: 30px;
+            }
+          }
+        </style>
+
+        <style>
+          /* Modern Form Styles */
+          .modern-form {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+          }
+
+          .search-and-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+          }
+
+          .filters-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+          }
+
+          .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+          }
+
+          .filter-group label {
+            font-weight: 500;
+            color: #666;
+            font-size: 14px;
+          }
+
+          .modern-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            color: #333;
+            font-size: 14px;
+            transition: all 0.3s ease;
+          }
+
+          .modern-select[multiple] {
+            height: 120px;
+            padding: 8px;
+            width: 100%;
+          }
+
+          .modern-select[multiple] option {
+            padding: 8px;
+            margin: 2px 0;
+            border-radius: 4px;
+          }
+
+          .modern-select[multiple] option:checked {
+            background: #4a5568 linear-gradient(0deg, #4a5568 0%, #4a5568 100%);
+            color: white;
+          }
+
+          .modern-select:hover {
+            border-color: #4c66ce;
+          }
+
+          .modern-select:focus {
+            outline: none;
+            border-color: #4c66ce;
+            box-shadow: 0 0 0 2px rgba(76,102,206,0.2);
+          }
+
+          .modern-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+          }
+
+          .modern-input:focus {
+            outline: none;
+            border-color: #4c66ce;
+            box-shadow: 0 0 0 2px rgba(76,102,206,0.2);
+          }
+
+          .filter-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+            margin-top: 10px;
+          }
+
+          .modern-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+          }
+
+          .modern-button.primary {
+            background: #4c66ce;
+            color: white;
+          }
+
+          .modern-button.secondary {
+            background: #f5f5f5;
+            color: #666;
+          }
+
+          .modern-button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+          }
+
+          .search-box {
+            width: 100%;
+          }
+
+          /* Search Styles */
+          .search-container {
+            margin-bottom: 20px;
+          }
+
+          .search-form {
+            display: flex;
+            gap: 10px;
+            max-width: 600px;
+          }
+
+          .search-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+          }
+
+          .search-button {
+            padding: 8px 16px;
+            background: #4c66ce;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+          }
+
+          .search-button:hover {
+            background: #3951b3;
+          }
+
+          /* Filter Styles */
+          .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+
+          .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+
+          .filter-group label {
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+          }
+
+          .filter-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+          }
+
+          .filter-group select[multiple] {
+            height: 120px;
+          }
+
+          .filter-group select:focus {
+            outline: none;
+            border-color: #4c66ce;
+            box-shadow: 0 0 0 2px rgba(76,102,206,0.2);
+          }
+
+          /* Actions Bar */
+          .actions-bar {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+            margin-bottom: 20px;
+          }
+
+          .button {
+            padding: 8px 16px;
+            background: #4c66ce;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+          }
+
+          .button:hover {
+            background: #3951b3;
+          }
+
+          /* Stats Container */
+          .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+          }
+
+          .stat-box {
+            background-color: var(--color-gray-dark);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px;
+            text-align: center;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+
+          .stat-box h3 {
+            margin: 0;
+            color: white;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+          }
+
+          .stat-box p {
+            margin: 0;
+            color: var(--color-orange);
+            font-size: 1.8em;
+            font-weight: bold;
+          }
+
+          .create-request-btn {
+            background-color: var(--color-gray-dark);
+            color: var(--color-orange);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+          }
+
+          .create-request-btn:hover {
+            opacity: 0.9;
+          }
+
+          /* Table Styles */
+          .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+
+          .items-table th,
+          .items-table td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #eee;
+          }
+
+          .items-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+          }
+
+          .items-table tr:hover {
+            background-color: #f5f5f5;
+          }
+
+          /* Existing styles... */
+          .pagination {
+            margin: 20px;
+            text-align: center;
+          }
+
+          .pagination a {
+            display: inline-block;
+            padding: 8px 12px;
+            margin: 0 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+          }
+
+          .pagination a:hover {
+            background-color: #f5f5f5;
+          }
+
+          .pagination a.active {
+            background-color: #ff8c00;
+            color: white;
+            border-color: #ff8c00;
+          }
+
+          .pagination .prev,
+          .pagination .next {
+            background-color: #ff8c00;
+            color: white;
+            border-color: #ff8c00;
+          }
+
+          .pagination .prev:hover,
+          .pagination .next:hover {
+            background-color: #ff8c00;
+          }
+
+          .item-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+          }
+
+          .edit, .view {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: white;
+            font-size: 0.9em;
+          }
+
+          .edit {
+            background-color: #4c66ce;
+          }
+
+          .view {
+            background-color: #6c757d;
+          }
+
+          .filters {
+            margin: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: start;
+          }
+
+          .filters > div {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+          }
+
+          .filters label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+          }
+
+          .filters select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+          }
+
+          .filters select[multiple] {
+            height: 120px;
+          }
+
+          #filter-status {
+            height: 40px;
+          }
+
+          .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px;
+          }
+
+          .search-box {
+            flex: 1;
+          }
+
+          .search-box input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 100%;
+          }
+
+          .stats-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            justify-content: center;
+          }
+
+          .stat-box {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-width: 150px;
+          }
+
+          .stat-box h3 {
+            margin: 0;
+            color: #666;
+            font-size: 16px;
+          }
+
+          .stat-box p {
+            margin: 10px 0 0;
+            color: #4c66ce;
+            font-size: 24px;
+            font-weight: bold;
+          }
+
+          .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+          }
+
+          .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+          }
+
+          .btn-secondary i {
+            margin-left: 5px;
+          }
+
+          .filter-group {
+            margin-bottom: 1rem;
+          }
+
+          .status-active {
+            color: green;
+          }
+
+          .status-inactive {
+            color: red;
+          }
+        </style>
+
+        <style>
+          /* Alert Popup Styles */
+          .alert-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: none;
+          }
+
+          .alert-popup.show {
+            display: block;
+          }
+
+          .alert-popup .icon {
+            font-size: 24px;
+            color: #ff9800;
+            margin-bottom: 10px;
+          }
+
+          .alert-popup .message {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 20px;
+          }
+
+          .alert-popup .close-btn {
+            padding: 8px 16px;
+            background-color: #4c66ce;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+          }
+
+          .alert-popup .close-btn:hover {
+            background-color: #3951b3;
+          }
+        </style>
+
+        <script>
+          function viewItemDetails(itemId) {
+            window.location.href = `/item/${itemId}`;
+          }
+          
+          const toggleSidebarButton = document.getElementById('toggle-sidebar');
+          const sidebar = document.querySelector('.sidebar');
+          const mainContent = document.querySelector('.main-content');
+          
+          toggleSidebarButton.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+          });
+
+          // تحديث العملاء والمجموعات
+          function updateClientsAndGroups(companyId) {
+            const clientSelect = document.getElementById('clientSelect');
+            const groupSelect = document.getElementById('groupSelect');
+            const clientOptions = clientSelect.options;
+            const groupOptions = groupSelect.options;
+
+            // إعادة تعيين العميل والمجموعة
+            clientSelect.value = '';
+            groupSelect.value = '';
+
+            // تحديث قائمة العملاء
+            for (let i = 0; i < clientOptions.length; i++) {
+              const option = clientOptions[i];
+              if (!option.value || option.dataset.company === companyId) {
+                option.style.display = 'block';
+              } else {
+                option.style.display = 'none';
+              }
+            }
+
+            // إخفاء جميع المجموعات
+            for (let i = 0; i < groupOptions.length; i++) {
+              groupOptions[i].style.display = 'none';
+            }
+
+            updateFilters();
+          }
+
+          // تحديث المجموعات
+          function updateGroups(clientId) {
+            const groupSelect = document.getElementById('groupSelect');
+            const options = groupSelect.options;
+            
+            // إعادة تعيين المجموعة
+            groupSelect.value = '';
+
+            // تحديث قائمة المجموعات
+            for (let i = 0; i < options.length; i++) {
+              const option = options[i];
+              if (!option.value || option.dataset.client === clientId) {
+                option.style.display = 'block';
+              } else {
+                option.style.display = 'none';
+              }
+            }
+
+            updateFilters();
+          }
+
+          // تحديث الفلاتر وإرسال النموذج
+          function updateFilters() {
+            const search = document.querySelector('input[name="search"]').value;
+            const companyId = document.querySelector('select[name="companyId"]').value;
+            const clientId = document.querySelector('select[name="clientId"]').value;
+            const groupIds = Array.from(document.querySelector('select[name="groupIds"]').selectedOptions)
+              .map(option => option.value)
+              .filter(value => value !== '');
+            const status = document.querySelector('select[name="status"]').value;
+
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (companyId) params.append('companyId', companyId);
+            if (clientId) params.append('clientId', clientId);
+            groupIds.forEach(id => params.append('groupIds', id));
+            if (status) params.append('status', status);
+
+            window.location.href = `/supplier-dashboard?${params.toString()}`;
+          }
+
+          // إضافة مستمعي الأحداث للفلاتر
+          document.querySelectorAll('.modern-select').forEach(select => {
+            select.addEventListener('change', updateFilters);
+          });
+
+          // إعادة تعيين الفلاتر
+          function resetFilters() {
+            window.location.href = '/supplier-dashboard';
+          }
+        </script>
+      </div>
+    </div>
+    <%- include('terms-modal') %>
+    
+    <!-- Alert Popup -->
+    <div class="alert-popup" id="alertPopup">
+      <div class="icon">
+        <i class="fas fa-exclamation-circle" style="color: #ff9800;"></i>
+      </div>
+      <div class="message"></div>
+      <button class="close-btn">موافق</button>
+    </div>
+
+    <script>
+      // Alert Popup Function
+      function showAlert(message) {
+        const popup = document.getElementById('alertPopup');
+        const messageEl = popup.querySelector('.message');
+        const closeBtn = popup.querySelector('.close-btn');
+        
+        messageEl.textContent = message;
+        popup.classList.add('show');
+
+        const hideAlert = () => {
+          popup.classList.remove('show');
+          closeBtn.removeEventListener('click', hideAlert);
+        };
+
+        closeBtn.addEventListener('click', hideAlert);
+      }
+
+      // Show alert when company is not selected
+      function validateCompanySelection() {
+        const companySelect = document.getElementById('companySelect');
+        if (!companySelect.value) {
+          showAlert('الرجاء اختيار الشركة أولاً');
+          return false;
+        }
+        return true;
+      }
+
+      // Function to handle restock request generation
+      function generateRestockRequest() {
+        // Get selected filters
+        const companyId = document.querySelector('select[name="companyId"]').value;
+        const clientId = document.querySelector('select[name="clientId"]').value;
+        const groupIds = Array.from(document.querySelector('select[name="groupIds"]').selectedOptions)
+          .map(option => option.value)
+          .filter(value => value !== '');
+
+        // Validate company selection
+        if (!companyId) {
+          showAlert('الرجاء اختيار الشركة أولاً');
+          return;
+        }
+
+        // Build the URL with query parameters
+        const params = new URLSearchParams();
+        if (companyId) params.append('companyId', companyId);
+        if (clientId) params.append('clientId', clientId);
+        groupIds.forEach(id => params.append('groupIds', id));
+
+        // Redirect to create restock request page with filters
+        window.location.href = `/create-restock-request?${params.toString()}`;
+      }
+    </script>
+  </body>
+</html>

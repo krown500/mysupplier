@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>تفاصيل المورد</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-container">
+      <div class="sidebar">
+        <button id="toggle-sidebar">☰</button>
+        <ul>
+          <li>
+            <a href="#">
+              <% if (user && user.username) { %> <%= user.username %> <% } %>
+            </a>
+          </li>
+          <li><a href="/logout">تسجيل خروج</a></li>
+          <li><a href="/companies">الشركات</a></li>
+          <li><a href="/create-company">إنشاء شركة</a></li>
+          <li><a href="/clients">العملاء</a></li>
+          <li><a href="/create-client">إنشاء عميل</a></li>
+          <li><a href="/groups">المجموعات</a></li>
+          <li><a href="/create-group">إنشاء مجموعة</a></li>
+          <li><a href="/suppliers">مدير المبيعات</a></li>
+          <li><a href="/create-supplier">إنشاء مدير مبيعات</a></li>
+          <li><a href="/items">الأصناف</a></li>
+          <li><a href="/create-item">إضافة صنف</a></li>
+        </ul>
+      </div>
+      <div class="main-content">
+        <button onclick="window.history.back()" class="back-button">
+          &larr; رجوع
+        </button>
+        <h1>تفاصيل المورد</h1>
+        <div class="supplier-details">
+          <h2><%= supplier.name %></h2>
+          <p>اسم المستخدم: <%= supplier.username %></p>
+          <p>رقم الهاتف: <%= supplier.phone %></p>
+          <a href="/suppliers" class="back-button">العودة إلى قائمة الموردين</a>
+        </div>
+      </div>
+    </div>
+    <script>
+      const toggleSidebarButton = document.getElementById("toggle-sidebar");
+      const body = document.body;
+
+      toggleSidebarButton.addEventListener("click", function () {
+        body.classList.toggle("sidebar-open");
+      });
+    </script>
+  </body>
+</html>

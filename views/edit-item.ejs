@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>تعديل الصنف</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-container no-sidebar">
+      <div class="main-content full-width">
+        <h1>تعديل الصنف</h1>
+        <button onclick="window.history.back()" class="back-button" style="margin-bottom: 20px;">رجوع</button>
+        <form action="/edit-item/<%= item.id %>" method="post" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="companyId">الشركة:</label>
+            <select id="companyId" name="companyId" class="form-control">
+              <option value="">بدون شركة</option>
+              <% companies.forEach(function(company) { %>
+              <option value="<%= company.id %>" <%= item.companyId === company.id ? 'selected' : '' %>>
+                <%= company.name %>
+              </option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="clientId">العميل:</label>
+            <select name="clientId" id="clientId" class="form-control">
+              <option value="">اختر العميل</option>
+              <% clients.forEach(function(client) { %>
+              <option value="<%= client.id %>" 
+                <%= item.clientId === client.id ? 'selected' : '' %>
+                data-company="<%= client.companyId %>">
+                <%= client.name %> (<%= client.companyName %>)
+              </option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="groupId">المجموعة:</label>
+            <select name="groupId" id="groupId" class="form-control">
+              <option value="">اختر المجموعة</option>
+              <% groups.forEach(function(group) { %>
+              <option value="<%= group.id %>"
+                <%= item.groupId === group.id ? 'selected' : '' %>
+                data-client="<%= group.clientId %>">
+                <%= group.name %>
+              </option>
+              <% }); %>
+            </select>
+          </div>
+
+          <% if (user.type === 'admin') { %>
+          <div class="form-group">
+            <label for="supplierId">المورد:</label>
+            <select id="supplierId" name="supplierId" class="form-control">
+              <option value="">بدون مورد</option>
+              <% suppliers.forEach(function(supplier) { %>
+              <option value="<%= supplier.id %>" <%= item.supplierId === supplier.id ? 'selected' : '' %>>
+                <%= supplier.name %>
+              </option>
+              <% }); %>
+            </select>
+          </div>
+          <% } %>
+
+          <div class="form-group">
+            <label for="name">اسم الصنف:</label>
+            <input type="text" id="name" name="name" value="<%= item.name %>" required class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="nameEn">اسم الصنف (En):</label>
+            <input type="text" id="nameEn" name="nameEn" value="<%= item.nameEn %>" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="barcode">باركود الحبة:</label>
+            <input type="number" id="barcode" name="barcode" value="<%= item.barcode %>" pattern="[0-9]*" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="itemNumber">رقم الصنف:</label>
+            <input type="number" id="itemNumber" name="itemNumber" value="<%= item.itemNumber %>" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="cartonPrice">سعر الكرتون:</label>
+            <input type="number" id="cartonPrice" name="cartonPrice" step="0.01" value="<%= item.cartonPrice %>" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="unitPrice">سعر الحبة:</label>
+            <input type="number" id="unitPrice" name="unitPrice" step="0.01" value="<%= item.unitPrice %>" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="bundleSize">الشد:</label>
+            <input type="number" id="bundleSize" name="bundleSize" value="<%= item.bundleSize %>" pattern="[0-9]{1,3}" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="quantity">الكمية:</label>
+            <input type="number" id="quantity" name="quantity" value="<%= item.quantity %>" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="origin">المنشأ:</label>
+            <input type="text" id="origin" name="origin" value="<%= item.origin %>" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="notes">ملاحظات:</label>
+            <textarea id="notes" name="notes" rows="4" class="form-control"><%= item.notes %></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="image">صورة الصنف:</label>
+            <input type="file" id="image" name="image" accept="image/*" class="form-control" />
+            <% if (item.image) { %>
+            <img src="<%= item.image %>" alt="Current Image" class="current-image" />
+            <% } %>
+          </div>
+
+          <button type="submit" class="btn btn-primary">حفظ التعديلات</button>
+        </form>
+      </div>
+    </div>
+    <script>
+      // تحديث قائمة العملاء عند تغيير الشركة
+      document.getElementById('companyId').addEventListener('change', function() {
+        const companyId = this.value;
+        const clientSelect = document.getElementById('clientId');
+        const groupSelect = document.getElementById('groupId');
+        
+        // إعادة تعيين قوائم العملاء والمجموعات
+        clientSelect.value = '';
+        groupSelect.value = '';
+        
+        // إخفاء جميع خيارات العملاء
+        Array.from(clientSelect.options).forEach(option => {
+          const optionCompanyId = option.getAttribute('data-company');
+          if (!companyId || optionCompanyId === companyId) {
+            option.style.display = '';
+          } else {
+            option.style.display = 'none';
+          }
+        });
+      });
+
+      // تحديث قائمة المجموعات عند تغيير العميل
+      document.getElementById('clientId').addEventListener('change', function() {
+        const clientId = this.value;
+        const groupSelect = document.getElementById('groupId');
+        
+        // إعادة تعيين قائمة المجموعات
+        groupSelect.value = '';
+        
+        // إخفاء جميع خيارات المجموعات
+        Array.from(groupSelect.options).forEach(option => {
+          const optionClientId = option.getAttribute('data-client');
+          if (!clientId || optionClientId === clientId) {
+            option.style.display = '';
+          } else {
+            option.style.display = 'none';
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

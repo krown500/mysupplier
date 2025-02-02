@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { 
+            background-color: #f8f9fa; 
+        }
+        .sidebar {
+            height: 100vh;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            right: 0;
+            background-color: #000000;
+            padding-top: 8px;
+            z-index: 1000;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+        .sidebar a {
+            padding: 6px 15px;
+            text-decoration: none;
+            font-size: 0.95em;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        .sidebar a:hover {
+            background-color: #ff6b00;
+        }
+        .sidebar a i {
+            margin-left: 10px;
+            width: 20px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        .sidebar a.active {
+            background-color: #ff6b00;
+            font-weight: bold;
+        }
+        .main-content {
+            margin: 0 auto;
+            padding: 20px;
+            max-width: 1000px;
+        }
+        .sidebar-open .main-content {
+            margin-right: 270px;
+        }
+    </style>
+</head>
+<body>
+    <!-- الشريط الجانبي -->
+    <div class="sidebar">
+        <button id="toggle-sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+        <ul>
+            <li>
+                <a href="#">
+                    <i class="fas fa-user-shield"></i>
+                    <span>admin</span>
+                </a>
+            </li>
+            <li>
+                <a href="/companies">
+                    <i class="fas fa-building"></i>
+                    <span>الشركات</span>
+                </a>
+            </li>
+            <li>
+                <a href="/create-company">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>إنشاء شركة</span>
+                </a>
+            </li>
+            <li>
+                <a href="/clients">
+                    <i class="fas fa-users"></i>
+                    <span>العملاء</span>
+                </a>
+            </li>
+            <li>
+                <a href="/create-client">
+                    <i class="fas fa-user-plus"></i>
+                    <span>إنشاء عميل</span>
+                </a>
+            </li>
+            <li>
+                <a href="/groups">
+                    <i class="fas fa-layer-group"></i>
+                    <span>المجموعات</span>
+                </a>
+            </li>
+            <li>
+                <a href="/create-group">
+                    <i class="fas fa-folder-plus"></i>
+                    <span>إنشاء مجموعة</span>
+                </a>
+            </li>
+            <li>
+                <a href="/suppliers">
+                    <i class="fas fa-chart-line"></i>
+                    <span>مدير المبيعات</span>
+                </a>
+            </li>
+            <li>
+                <a href="/create-supplier">
+                    <i class="fas fa-truck"></i>
+                    <span>إنشاء مورد</span>
+                </a>
+            </li>
+            <li>
+                <a href="/items">
+                    <i class="fas fa-box"></i>
+                    <span>الأصناف</span>
+                </a>
+            </li>
+            <li>
+                <a href="/create-item">
+                    <i class="fas fa-plus-square"></i>
+                    <span>إضافة صنف</span>
+                </a>
+            </li>
+            <li>
+                <a href="/logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>تسجيل خروج</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content">
+        <%- body %>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

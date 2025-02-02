@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تفاصيل العميل</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="sidebar">
+            <button id="toggle-sidebar">☰</button>
+            <ul>
+              <li>
+                <a href="#">
+                  <% if (user && user.username) { %> <%= user.username %> <% } %>
+                </a>
+              </li>
+              <li><a href="/logout">تسجيل خروج</a></li>
+              <li><a href="/companies">الشركات</a></li>
+              <li><a href="/create-company">إنشاء شركة</a></li>
+              <li><a href="/clients">العملاء</a></li>
+              <li><a href="/create-client">إنشاء عميل</a></li>
+              <li><a href="/groups">المجموعات</a></li>
+              <li><a href="/create-group">إنشاء مجموعة</a></li>
+              <li><a href="/suppliers">مدير المبيعات</a></li>              <li><a href="/create-supplier">إنشاء مورد</a></li>
+              <li><a href="/items">الأصناف</a></li>
+              <li><a href="/create-item">إضافة صنف</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <h1>تفاصيل العميل</h1>
+            <h2><%= client.name %></h2>
+            <h3>الشركات</h3>
+            <ul id="companies-list">
+                <% if (companies && companies.length > 0) { %>
+                    <% companies.forEach(company => { %>
+                        <li><%= company.name %></li>
+                    <% }); %>
+                <% } else { %>
+                    <li>لا يوجد شركات مرتبطة بهذا العميل</li>
+                <% } %>
+            </ul>
+            <h3>المجموعات</h3>
+            <ul id="groups-list">
+                <% if (groups && groups.length > 0) { %>
+                    <% groups.forEach(group => { %>
+                        <li><%= group.name %></li>
+                    <% }); %>
+                <% } else { %>
+                    <li>لا يوجد مجموعات مرتبطة بهذا العميل</li>
+                <% } %>
+            </ul>
+             <h3>الموردين</h3>
+            <ul id="suppliers-list">
+                 <% if (suppliers && suppliers.length > 0) { %>
+                    <% suppliers.forEach(supplier => { %>
+                        <li><%= supplier.name %></li>
+                    <% }); %>
+                <% } else { %>
+                    <li>لا يوجد موردين مرتبطين بهذا العميل</li>
+                <% } %>
+            </ul>
+        </div>
+    </div>
+    <script>
+        const toggleSidebarButton = document.getElementById('toggle-sidebar');
+        const body = document.body;
+
+        toggleSidebarButton.addEventListener('click', function() {
+            body.classList.toggle('sidebar-open');
+        });
+    </script>
+</body>
+</html>

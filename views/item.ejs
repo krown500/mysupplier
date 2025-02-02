@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>عرض الصنف</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <!-- إضافة مكتبة JsBarcode -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+  </head>
+  <body>
+    <div class="page-container no-sidebar">
+      <div class="main-content full-width">
+        <h1>عرض الصنف</h1>
+        <button onclick="window.history.back()" class="back-button" style="margin-bottom: 20px;">رجوع</button>
+        <div class="item-details">
+          <% if (item.image) { %>
+          <img src="<%= item.image %>" alt="<%= item.name %>" />
+          <% } %>
+
+          <h2><%= item.name %></h2>
+          <p>اسم الصنف (En): <%= item.nameEn %></p>
+
+          <!-- إضافة عنصر SVG للباركود -->
+          <div
+            class="barcode-container"
+            style="text-align: center; margin: 20px 0"
+          >
+            <p>باركود الحبة:</p>
+            <svg id="barcode"></svg>
+          </div>
+
+          <p>رقم الصنف: <%= isNaN(item.itemNumber) ? '' : item.itemNumber %></p>
+          <p>
+            سعر الكرتون: <%= isNaN(item.cartonPrice) ? '' : item.cartonPrice %>
+          </p>
+          <p>سعر الحبة: <%= isNaN(item.unitPrice) ? '' : item.unitPrice %></p>
+          <p>الشد: <%= isNaN(item.bundleSize) ? '' : item.bundleSize %></p>
+          <p>الكمية: <%= isNaN(item.quantity) ? '' : item.quantity %></p>
+          <p>المنشأ: <%= item.origin %></p>
+          <p>ملاحظات: <%= item.notes %></p>
+
+          <p><b>العملاء:</b></p>
+          <ul>
+            <% if (item.clientIds && clients) { %> <%
+            item.clientIds.forEach(function(clientId) { %> <% const client =
+            clients.find(function(c) { return c.id === clientId; }); %> <% if
+            (client) { %>
+            <li><%= client.name %></li>
+            <% } %> <% }); %> <% } %>
+          </ul>
+
+          <p><b>المجموعات:</b></p>
+          <ul>
+            <% if (item.groupIds && groups) { %> <%
+            item.groupIds.forEach(function(groupId) { %> <% const group =
+            groups.find(function(g) { return g.id === groupId; }); %> <% if
+            (group) { %>
+            <li><%= group.name %></li>
+            <% } %> <% }); %> <% } %>
+          </ul>
+
+          <a href="/supplier-dashboard" class="back-button"
+            >العودة إلى لوحة التحكم</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // تهيئة الباركود
+      JsBarcode("#barcode", "<%= item.barcode %>", {
+        format: "CODE128",
+        width: 2,
+        height: 100,
+        displayValue: true,
+        font: "monospace",
+        fontSize: 16,
+        textAlign: "center",
+        textPosition: "bottom",
+        textMargin: 2,
+        background: "#ffffff",
+        lineColor: "#000000",
+        margin: 10,
+      });
+    </script>
+  </body>
+</html>

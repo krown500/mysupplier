@@ -1,0 +1,52 @@
+<!-- Pagination Controls -->
+<div class="pagination-container">
+  <div class="pagination">
+    <% if (currentPage > 1) { %>
+      <a href="?page=1&search=<%= search %>" class="page-link">الأول</a>
+      <a href="?page=<%= currentPage - 1 %>&search=<%= search %>" class="page-link">السابق</a>
+    <% } %>
+    
+    <% for(let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
+      <a href="?page=<%= i %>&search=<%= search %>" 
+         class="page-link <%= i === currentPage ? 'active' : '' %>">
+        <%= i %>
+      </a>
+    <% } %>
+    
+    <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>&search=<%= search %>" class="page-link">التالي</a>
+      <a href="?page=<%= totalPages %>&search=<%= search %>" class="page-link">الأخير</a>
+    <% } %>
+  </div>
+</div>
+
+<style>
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.pagination {
+  display: flex;
+  gap: 5px;
+}
+
+.page-link {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #333;
+}
+
+.page-link:hover {
+  background-color: #f5f5f5;
+}
+
+.page-link.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+</style>

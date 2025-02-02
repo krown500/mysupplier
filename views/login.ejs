@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>تسجيل الدخول</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="login-box">
+        <h1>تسجيل الدخول</h1>
+        <% if (error) { %>
+        <p class="error"><%= error %></p>
+        <% } %>
+        <form action="/login" method="post" class="login-form">
+          <div class="form-group">
+            <label for="username">اسم المستخدم:</label>
+            <input type="text" id="username" name="username" required />
+          </div>
+          <div class="form-group">
+            <label for="password">كلمة المرور:</label>
+            <input type="password" id="password" name="password" required />
+          </div>
+          <button type="submit" class="login-button">تسجيل الدخول</button>
+        </form>
+      </div>
+      
+      <div class="instructions-box">
+        <h2>استخدام الموقع مجاني</h2>
+        <div class="instructions-content">
+          <h3>1. مجانية الخدمات:</h3>
+          <ul>
+            <li>يتيح الموقع للمستخدمين الوصول إلى المحتوى والخدمات الأساسية مجانًا دون أي رسوم.</li>
+            <li>قد يتم تقديم خدمات أو ميزات إضافية مدفوعة مستقبلاً، مع توضيح التكلفة وشروط الدفع بشكل مسبق.</li>
+          </ul>
+          
+          <h3>2. التسجيل المجاني:</h3>
+          <ul>
+            <li>التسجيل على الموقع مجاني بالكامل، ولا يتم فرض أي رسوم على إنشاء الحساب.</li>
+          </ul>
+          
+          <h3>3. الإعلانات والتمويل:</h3>
+          <ul>
+            <li>للحفاظ على مجانية الخدمات، قد يتم عرض إعلانات على الموقع، مع الحرص على أن تكون مناسبة وغير مزعجة للمستخدمين.</li>
+          </ul>
+          
+          <h3>4. الالتزام بالمجانية:</h3>
+          <ul>
+            <li>نلتزم بعدم فرض أي رسوم خفية أو مفاجئة على المستخدمين دون إعلام مسبق وموافقتهم.</li>
+          </ul>
+          
+          <h3>5. إخلاء المسؤولية:</h3>
+          <ul>
+            <li>بالرغم من مجانية الخدمات، نحتفظ بحقنا في تعديل أو إيقاف بعض الميزات أو الخدمات المجانية في أي وقت دون إشعار مسبق.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
