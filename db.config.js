@@ -1,10 +1,10 @@
 const mysql = require('mysql');
 
 const pool = mysql.createPool({
-  host: 'mysql.hostinger.com',
-  user: 'krown',
+  host: 'localhost', // أو عنوان السيرفر المقدم من الاستضافة
+  user: 'zero',
   password: 'AAkrown00@@@',
-  database: 'krown',
+  database: 'zero',
   connectionLimit: 10,
   waitForConnections: true,
   queueLimit: 0
